@@ -1,77 +1,12 @@
+#include "InfiniteGenerator.hpp"
+#include "FiniteGenerator.hpp"
+#include "TemplateGeneratorWithIterators.hpp"
 #include <iostream>
-#include <coroutine>
+#include <functional>
+#include <optional>
 
 
-//class CoroTask;
-//
-//CoroTask coro(int max)
-//{
-//    std::cout << "coro " << max << " start\n";
-//    for  (int val = 0; val < max; val++)
-//    {
-//        std::cout << "coro " << val << '/' << max << '\n';
-//
-//        co_await std::suspend_always();
-//    }
-//
-//    std::cout << "coro " << max << " end\n";
-//}
-
-
-struct Generator
-{
-    struct promise_type
-    {
-        static std::suspend_always initial_suspend() noexcept
-        {
-            return {};
-        }
-
-        std::suspend_always yield_value(int value)
-        {
-            _result = value;
-            return {};
-        }
-
-        static std::suspend_always final_suspend() noexcept
-        {
-            return {};
-        };
-
-        Generator get_return_object()
-        {
-            return {handle_type::from_promise(*this)};
-        }
-
-        static void unhandled_exception()
-        {
-            std::rethrow_exception(std::current_exception());
-        }
-
-        int _result;
-    };
-
-    using handle_type = std::coroutine_handle<promise_type>;
-
-    Generator(handle_type handler)
-    : _handler(handler)
-    {}
-
-    ~Generator()
-    {
-        _handler.destroy();
-    }
-
-    int operator()()
-    {
-        _handler();
-        return _handler.promise()._result;
-    }
-
-    handle_type _handler;
-};
-
-Generator genIota()
+InfiniteGenerator genIota() // NOLINT(*-static-accessed-through-instance)
 {
     for (int i = 0; true; i++)
     {
@@ -79,8 +14,7 @@ Generator genIota()
     }
 }
 
-
-int main()
+void genIotaUsage()
 {
     auto gen = genIota();
 
@@ -88,18 +22,65 @@ int main()
     {
         std::cout << gen() << " ";
     }
+    std::cout << std::endl;
+}
 
-//    auto coroTask = coro(3);
-//
-//    std::cout << "coro() started\n";
-//
-//    while (coroTask.resume())
-//    {
-//        std::cout << "coro() suspended";
-//    }
-//
-//    std::cout << "coro() done\n";
+FiniteGenerator genThirdWheel() // NOLINT(*-static-accessed-through-instance)
+{
+    for (auto el: {1, 7, 11, 13, 17, 19, 23, 29})
+    {
+        co_yield el;
+    }
+}
+
+void genThirdWheelUsage()
+{
+    auto gen = genThirdWheel();
+
+    while (gen.advance())
+    {
+        std::cout << gen.getValue() << " ";
+    }
+    std::cout << std::endl;
+}
+
+
+template <typename Ret>
+TemplateGeneratorWithIterators<Ret> genFromFunction(
+    std::function<std::optional<Ret>()> func,
+    std::function<bool()> additionalShouldContinue = []{ return true; })
+{
+    while (additionalShouldContinue())
+    {
+        auto result = func();
+        if (!result)
+        {
+            break;
+        }
+        co_yield *result;
+    }
+}
+
+void genFromFunctionUsage()
+{
+    auto gen = genFromFunction([a = 1]()
+        {
+            for ()
+            {
+
+            }
+            std::optional(1);
+        });
+}
+
+
+int main()
+{
+    std::cout << "genIotaUsage():" << std::endl;
+    genIotaUsage();
+
+    std::cout << "genThirdWheelUsage():" << std::endl;
+    genThirdWheelUsage();
 
     return 0;
 }
-

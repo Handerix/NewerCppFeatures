@@ -21,4 +21,12 @@ target_link_libraries(NewerCppFeatures PRIVATE Boost::boost)
 target_link_libraries(NewerCppFeatures PRIVATE OpenSSL::SSL OpenSSL::Crypto)
 target_include_directories(NewerCppFeatures INTERFACE C:/Users/rgawlik/vcpkg/packages/boost-multiprecision_x64-mingw-dynamic/include/boost/multiprecision) # for recognizing include files
 
-add_executable(main_coroutines main_coroutines.cpp)
+add_executable(main_coroutines main_coroutines.cpp
+        InfiniteGenerator.cpp
+        InfiniteGenerator.hpp
+        CoroTask.cpp
+        CoroTask.hpp
+        FiniteGenerator.cpp
+        FiniteGenerator.hpp
+        TemplateGeneratorWithIterators.cpp
+        TemplateGeneratorWithIterators.hpp)
